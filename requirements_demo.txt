@@ -1,0 +1,6 @@
+llama-index
+openai
+streamlit
+git+https://github.com/illuin-tech/colpali
+transformers
+vllm==0.8.2

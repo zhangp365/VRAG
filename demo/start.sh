@@ -1,0 +1,3 @@
+
+vllm serve /mnt/nas-alinlp/qiuchen.wqc/code/LLaMA-Factory/saves/qwen25_vl-7b-w-crop/full/sft --port 8099 --host 0.0.0.0 --limit-mm-per-prompt image=10 --served-model-name Qwen/Qwen2.5-VL-7B-Instruct
+vllm serve /mnt/nas-alinlp/qiuchen.wqc/code/verl/checkpoints/verl_grpo_slidevqa/SFT_w_crop_4_gpus_4_maxturns_5_ngroups_qwen2_5_vl_7b/global_step_50/actor/huggingface --port 8001 --host 0.0.0.0 --limit-mm-per-prompt image=10 --served-model-name Qwen/Qwen2.5-VL-7B-Instruct
