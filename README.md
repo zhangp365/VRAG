@@ -1,6 +1,6 @@
 
 
-# <div align="center">✨VRAG: Moving Towards Next-Generation Retrieval-Augmented Generation<div>
+# <div align="center">✨VRAG: Moving Towards Next-Generation<br>Retrieval-Augmented Generation<div>
 
 <div align="center">
 <!-- <h1>A Multi-round Multi-modal Reinforcement Learning Framework</h1> -->
@@ -8,6 +8,7 @@
 <a href="" target="_blank"><img src=https://img.shields.io/badge/Paper-arXiv-red></a>
 <a href=''><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Datasets-green'></a>
 <a href="" target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-model-blue></a>
+<https://github.com/user-attachments/assets/86df27ca-7872-4327-9a76-8d6076970f62>
 </div>
 
 
