@@ -1,6 +1,6 @@
 
 
-# <div align="center">✨VRAG: Moving Towards Next-Generation<br>Retrieval-Augmented Generation<div>
+# <div align="center">✨VRAG: Moving Towards Next-Generation RAG<div>
 
 <div align="center">
 <!-- <h1>A Multi-round Multi-modal Reinforcement Learning Framework</h1> -->
