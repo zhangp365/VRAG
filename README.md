@@ -10,8 +10,7 @@
 <a href="" target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-model-blue></a>
 </div>
 
-<https://github.com/user-attachments/assets/44ffe4b9-be26-4b93-a77b-02fed16e33fe>
-
+<https://github.com/user-attachments/assets/86df27ca-7872-4327-9a76-8d6076970f62>
 
 
 ## 🔥 News
