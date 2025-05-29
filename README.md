@@ -5,9 +5,9 @@
 <div align="center">
 <!-- <h1>A Multi-round Multi-modal Reinforcement Learning Framework</h1> -->
 <p><strong>Repo for "VRAG-RL: Empowering Vision-Perception-Based RAG for Visually Rich Information Understanding via Iterative Reasoning with Reinforcement Learning"</strong></p>
-<a href="" target="_blank"><img src=https://img.shields.io/badge/Paper-arXiv-red></a>
-<a href=''><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Datasets-green'></a>
-<a href="" target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-model-blue></a>
+<a href="https://arxiv.org/pdf/2505.22019" target="_blank"><img src=https://img.shields.io/badge/Paper-arXiv-red></a>
+<!-- <a href=''><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Datasets-green'></a> -->
+<a href="https://huggingface.co/autumncc/Qwen2.5-VL-7B-VRAG" target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-model-blue></a>
 </div>
 
 <https://github.com/user-attachments/assets/86df27ca-7872-4327-9a76-8d6076970f62>
@@ -54,7 +54,7 @@ python search_engine/search_engine_api.py
 ```
 Then download the model and deploy the server using vllm. For a 7B model, it can be deployed on a single A100 80G GPU.
 ```bash
-vllm serve Qwen/Qwen2.5-VL-7B-Instruct --port 8001 --host 0.0.0.0 --limit-mm-per-prompt image=10 --served-model-name Qwen/Qwen2.5-VL-7B-Instruct
+vllm serve autumncc/Qwen2.5-VL-7B-VRAG --port 8001 --host 0.0.0.0 --limit-mm-per-prompt image=10 --served-model-name Qwen/Qwen2.5-VL-7B-Instruct
 ```
 Finally, use Streamlit to launch the demo.
 ```bash
@@ -121,9 +121,10 @@ answer = vrag.run('What is the capital of France?')
 </p>
 </div>
 
-### Training Dependencies
-
 Release Soon
+
+<!-- ### Training Dependencies -->
+
 <!-- ```bash
 cd VRAG-RL
 # Install requirements for training
@@ -146,5 +147,13 @@ pip install -e .
 ## 📝 Citation
 
 ```bigquery
-
+@misc{wang2025vragrlempowervisionperceptionbasedrag,
+      title={VRAG-RL: Empower Vision-Perception-Based RAG for Visually Rich Information Understanding via Iterative Reasoning with Reinforcement Learning}, 
+      author={Qiuchen Wang and Ruixue Ding and Yu Zeng and Zehui Chen and Lin Chen and Shihang Wang and Pengjun Xie and Fei Huang and Feng Zhao},
+      year={2025},
+      eprint={2505.22019},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2505.22019}, 
+}
 ```
