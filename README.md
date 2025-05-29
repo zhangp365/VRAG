@@ -12,10 +12,17 @@
 
 <https://github.com/user-attachments/assets/86df27ca-7872-4327-9a76-8d6076970f62>
 
+**⌛️ The project is still under ongoing development:**
+- [x] Draft Demo
+- [x] Model Release
+- [ ] More Comprehensive Demo
+- [ ] Training Code
+
+
 
 ## 🔥 News
 - 🎉 We have released the demo, allowing you to customize your own VRAG.
-- ⌛️ Training code will be released soon.
+<!-- - ⌛️ Training code will be released soon. -->
 <!-- - 🎉 Our framework integrates various embedding models, enabling you to create your own retriever.
 - 🎉 We have released the ViDoSeek dataset, which is suitable for Retrieval-augmented Generation in the large visually rich document collection. -->
 
