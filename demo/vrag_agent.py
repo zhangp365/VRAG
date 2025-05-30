@@ -164,7 +164,7 @@ class VRAG:
                 if self.generator:
                     image_to_draw = self.image_input[-2].copy()
                     draw = ImageDraw.Draw(image_to_draw)
-                    draw.rectangle(bbox, outline=(255, 0, 0), width=5)
+                    draw.rectangle(bbox, outline=(160, 32, 240), width=7)
                     yield 'crop_image', self.image_input[-1], image_to_draw
 
             max_steps -= 1
