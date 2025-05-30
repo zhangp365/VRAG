@@ -10,7 +10,7 @@
 <a href="https://huggingface.co/autumncc/Qwen2.5-VL-7B-VRAG" target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-model-blue></a>
 </div>
 
-<https://github.com/user-attachments/assets/86df27ca-7872-4327-9a76-8d6076970f62>
+<https://github.com/user-attachments/assets/6d9bd7af-4ad9-4804-910b-2b2c5b2e0c35>
 
 **⌛️ The project is still under ongoing development:**
 - [x] Draft Demo
