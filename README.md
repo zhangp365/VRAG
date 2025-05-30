@@ -12,16 +12,19 @@
 
 <https://github.com/user-attachments/assets/6d9bd7af-4ad9-4804-910b-2b2c5b2e0c35>
 
-**⌛️ The project is still under ongoing development:**
+<!-- **⌛️ The project is still under ongoing development:**
 - [x] Draft Demo
 - [x] Model Release
 - [ ] More Comprehensive Demo
-- [ ] Training Code
+- [ ] Training Code -->
 
 
 
 ## 🔥 News
 - 🎉 We have released the demo, allowing you to customize your own VRAG.
+- 🎉 Our framework integrates SOTA visual embedding models, enabling you to create your own retriever.
+- 🎉 We are releasing our 7B model and will gradually release models in more sizes. Welcome to use!
+- ⏳ The project is still under ongoing development, and the training code will be available soon~
 <!-- - ⌛️ Training code will be released soon. -->
 <!-- - 🎉 Our framework integrates various embedding models, enabling you to create your own retriever.
 - 🎉 We have released the ViDoSeek dataset, which is suitable for Retrieval-augmented Generation in the large visually rich document collection. -->
