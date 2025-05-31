@@ -1,6 +1,6 @@
 
 
-# <div align="center">✨VRAG-RL: Moving Towards Next-Generation RAG<div>
+# <div align="center">✨VRAG-RL: Moving Towards Next-Generation RAG via Multi-Modal Agent RL<div>
 
 <div align="center">
 <!-- <h1>A Multi-round Multi-modal Reinforcement Learning Framework</h1> -->
@@ -11,19 +11,18 @@
 </div>
 
 
-
 <https://github.com/user-attachments/assets/6d9bd7af-4ad9-4804-910b-2b2c5b2e0c35>
 
 <https://github.com/user-attachments/assets/22c90e3e-ec04-4967-9bb9-52d8c1ebd410>
 
 
-<table>
+<!-- <table>
   <tr>
     <td><img src="assets/gif1.GIF" alt="GIF1" width="200"></td>
     <td><img src="assets/gif2.GIF" alt="GIF2" width="200"></td>
     <td><img src="assets/gif3.GIF" alt="GIF3" width="200"></td>
   </tr>
-</table>
+</table> -->
 
 <!-- **⌛️ The project is still under ongoing development:**
 - [x] Draft Demo
