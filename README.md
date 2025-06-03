@@ -14,13 +14,13 @@
   <table style="border-collapse: collapse; margin: 0 auto;">
     <tr>
       <td style="padding: 5px;">
-        <img src="assets/gif1.gif" alt="GIF1" width="200" style="border-radius: 5px;">
+        <img src="assets/gif1.gif" alt="GIF1" width="200" style="border-radius: 5px;" loop="infinite">
       </td>
       <td style="padding: 5px;">
-        <img src="assets/gif2.GIF" alt="GIF2" width="200" style="border-radius: 5px;">
+        <img src="assets/gif2.GIF" alt="GIF2" width="200" style="border-radius: 5px;" loop="infinite">
       </td>
       <td style="padding: 5px;">
-        <img src="assets/gif3.GIF" alt="GIF3" width="200" style="border-radius: 5px;">
+        <img src="assets/gif3.GIF" alt="GIF3" width="200" style="border-radius: 5px;" loop="infinite">
       </td>
     </tr>
   </table>
