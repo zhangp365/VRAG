@@ -173,6 +173,9 @@ pip install -e .
 
 ### Step3. Run RL Training with Qwen2.5-VL-Instruct. -->
 
+## 🙏 Acknowledge
+This work is implemented based on [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory), [Search-R1](https://github.com/PeterGriffinJin/Search-R1), and [verl](https://github.com/volcengine/verl). We greatly appreciate their valuable contributions to the community.
+
 
 ## 📝 Citation
 
