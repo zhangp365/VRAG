@@ -10,17 +10,17 @@
 <a href="https://huggingface.co/autumncc/Qwen2.5-VL-7B-VRAG" target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-model-blue></a>
 </div>
 
-<div align="center" style="background-color: #f0f0f0; padding: 5px; border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);">
+<div align="center" style="background-color: #f0f0f0; padding: 5px; border-radius: 5px;">
   <table style="border-collapse: collapse; margin: 0 auto;">
     <tr>
       <td style="padding: 5px;">
-        <img src="assets/gif1.gif" alt="GIF1" width="200" style="border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
+        <img src="assets/gif1.gif" alt="GIF1" width="200" style="border-radius: 5px;">
       </td>
       <td style="padding: 5px;">
-        <img src="assets/gif2.GIF" alt="GIF2" width="200" style="border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
+        <img src="assets/gif2.GIF" alt="GIF2" width="200" style="border-radius: 5px;">
       </td>
       <td style="padding: 5px;">
-        <img src="assets/gif3.GIF" alt="GIF3" width="200" style="border-radius: 5px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">
+        <img src="assets/gif3.GIF" alt="GIF3" width="200" style="border-radius: 5px;">
       </td>
     </tr>
   </table>
