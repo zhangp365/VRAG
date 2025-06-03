@@ -194,4 +194,5 @@ This work is implemented based on [ViDoRAG](https://github.com/Alibaba-NLP/ViDoR
 ## Our Projects
 Explore our additional research on Visual Retrieval-augmented Generation.
 
-ViDoRAG: Visual Document Retrieval-Augmented Generation via Dynamic Iterative Reasoning Agents. A novel RAG framework that utilizes a multi-agent, actor-critic paradigm for iterative reasoning, enhancing the noise robustness of generation models. Code released at: [https://github.com/Alibaba-NLP/ViDoRAG](https://github.com/Alibaba-NLP/ViDoRAG) 
+ViDoRAG: Visual Document Retrieval-Augmented Generation via Dynamic Iterative Reasoning Agents. A novel RAG framework that utilizes a multi-agent, actor-critic paradigm for iterative reasoning, enhancing the noise robustness of generation models. Code released at: [https://github.com/Alibaba-NLP/ViDoRAG](https://github.com/Alibaba-NLP/ViDoRAG) [![GitHub stars](https://img.shields.io/github/stars/Alibaba-NLP/ViDoRAG?style=social)](https://github.com/Alibaba-NLP/ViDoRAG)
+
