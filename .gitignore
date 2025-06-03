@@ -1,4 +1,7 @@
 
+data
+test.sh
+
 **/*.pt
 **/checkpoints
 **/wget-log
