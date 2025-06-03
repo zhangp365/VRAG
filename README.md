@@ -174,7 +174,7 @@ pip install -e .
 ### Step3. Run RL Training with Qwen2.5-VL-Instruct. -->
 
 ## 🙏 Acknowledge
-This work is implemented based on [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory), [Search-R1](https://github.com/PeterGriffinJin/Search-R1), and [verl](https://github.com/volcengine/verl). We greatly appreciate their valuable contributions to the community.
+This work is implemented based on [ViDoRAG](https://github.com/Alibaba-NLP/ViDoRAG), [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory), [Search-R1](https://github.com/PeterGriffinJin/Search-R1), and [verl](https://github.com/volcengine/verl). We greatly appreciate their valuable contributions to the community.
 
 
 ## 📝 Citation
@@ -190,3 +190,8 @@ This work is implemented based on [LLaMA-Factory](https://github.com/hiyouga/LLa
       url={https://arxiv.org/abs/2505.22019}, 
 }
 ```
+
+## Our Projects
+Explore our additional research on Visual Retrieval-augmented Generation.
+
+ViDoRAG: Visual Document Retrieval-Augmented Generation via Dynamic Iterative Reasoning Agents. A novel RAG framework that utilizes a multi-agent, actor-critic paradigm for iterative reasoning, enhancing the noise robustness of generation models. Code released at: [https://github.com/Alibaba-NLP/ViDoRAG](https://github.com/Alibaba-NLP/ViDoRAG) 
