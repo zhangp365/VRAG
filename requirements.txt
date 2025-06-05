@@ -19,7 +19,7 @@ torchdata
 transformers
 vllm==0.8.2
 wandb
-llama-index
+llama-index==0.12.0
 openai
 streamlit
 git+https://github.com/illuin-tech/colpali
