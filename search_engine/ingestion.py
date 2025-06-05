@@ -27,7 +27,7 @@ class Ingestion:
 
     def ingestion_example(self, input_file, output_file):
         documents = self.reader.load_file(Path(input_file),self.reader.file_metadata,self.reader.file_extractor)
-        nodes = self.pipeline.run(documents=documents,num_workers=1, show_progress=False)
+        nodes = self.pipeline.run(documents=documents,num_workers=2, show_progress=False)
         nodes_json = [node.to_dict() for node in nodes]
         with open(output_file, 'w') as json_file:
             json.dump(nodes_json, json_file, indent=2, ensure_ascii=False)
