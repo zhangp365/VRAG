@@ -4,6 +4,7 @@ from typing import List, Dict, Any  # 导入类型提示，让代码更清晰
 from search_engine import SearchEngine
 from tqdm import tqdm
 import os
+import logging
 
 dataset_dir = './search_engine/corpus'
 
@@ -46,4 +47,5 @@ async def search(queries: List[str] = Query(...)):
     return results_batch
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     uvicorn.run(app, host="0.0.0.0", port=8002)
