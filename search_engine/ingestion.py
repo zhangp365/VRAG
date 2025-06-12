@@ -8,7 +8,11 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SimpleFileNodeParser
 from llama_index.core import SimpleDirectoryReader
 
-from vl_embedding import VL_Embedding
+from vl_embedding import VL_Embedding, PICKLE_NODE
+import logging
+import time
+import pickle
+logger = logging.getLogger(__name__)
 
 class Ingestion:
     def __init__(self, dataset_dir,input_prefix='img',output_prefix='colqwen_ingestion',embed_model_name='vidore/colqwen2-v1.0'):
@@ -25,12 +29,19 @@ class Ingestion:
 
 
 
-    def ingestion_example(self, input_file, output_file):
+    def ingestion_example(self, input_file, output_file):  
         documents = self.reader.load_file(Path(input_file),self.reader.file_metadata,self.reader.file_extractor)
+
+        start_time = time.time()
         nodes = self.pipeline.run(documents=documents,num_workers=1, show_progress=False)
-        nodes_json = [node.to_dict() for node in nodes]
-        with open(output_file, 'w') as json_file:
-            json.dump(nodes_json, json_file, indent=2, ensure_ascii=False)
+        logger.info(f"document {input_file} ingestion time taken: {time.time() - start_time} seconds")
+        if PICKLE_NODE:
+            with open(output_file, 'wb') as f:
+                pickle.dump(nodes, f)
+        else:
+            nodes_json = [node.to_dict() for node in nodes]
+            with open(output_file, 'w') as json_file:
+                json.dump(nodes_json, json_file, indent=2, ensure_ascii=False)        
         return True
     
     def ingestion_multi_session(self):

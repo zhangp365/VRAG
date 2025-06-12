@@ -11,6 +11,7 @@ from llama_index.core.callbacks import CallbackManager
 from llama_index.core.base.embeddings.base import Embedding
 
 from colpali_engine.models import ColQwen2, ColQwen2Processor, ColPali, ColPaliProcessor
+PICKLE_NODE = True
 
 
 def weighted_mean_pooling(hidden, attention_mask):

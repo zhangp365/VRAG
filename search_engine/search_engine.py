@@ -6,11 +6,23 @@ from tqdm import tqdm
 import torch
 
 from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo, ImageNode
-from vl_embedding import VL_Embedding
+from vl_embedding import VL_Embedding, PICKLE_NODE
+import pickle
+import time
+import logging
+logger = logging.getLogger(__name__)
 
 
 def nodefile2node(input_file):
     nodes = []
+    if PICKLE_NODE:
+        try:
+            nodes = pickle.load(open(input_file, 'rb'))
+            return nodes
+        except Exception as e:
+            # if pickle file is not valid, try to load it as json
+            logger.warning(f"Error loading pickle file {input_file}: {e}")
+
     for doc in json.load(open(input_file, 'r')):
         if doc['class_name'] == 'TextNode' and doc['text'] != '':
             nodes.append(TextNode.from_dict(doc))
@@ -69,12 +81,14 @@ class SearchEngine:
     def load_node_postprocessors(self):
         return []
     def batch_search(self, queries: List[str]):
+        start_time = time.time()
         batch_queries = self.vector_embed_model.processor.process_queries(queries).to(self.vector_embed_model.embed_model.device)
         with torch.no_grad():
             query_embeddings = self.vector_embed_model.embed_model(**batch_queries)
         scores = self.vector_embed_model.processor.score_multi_vector(query_embeddings, self.embedding_img, batch_size=256, device=self.vector_embed_model.embed_model.device)
         values, indices = torch.topk(scores, k=min(self.image_nums,10), dim=1)
         recall_results = [[self.nodes[idx].metadata['file_name'] for idx in row] for row in indices]
+        logger.info(f"batch_search time taken: {(time.time() - start_time):.2f} seconds")
         return recall_results
 
 
