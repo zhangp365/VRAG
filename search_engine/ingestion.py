@@ -10,7 +10,7 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SimpleFileNodeParser
 from llama_index.core import SimpleDirectoryReader
 
-from vl_embedding import VL_Embedding, PICKLE_NODE
+from vl_embedding import VL_Embedding
 import logging
 import time
 import numpy as np
