@@ -1,6 +1,8 @@
 import os
 import sys
 import json
+import argparse
+
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from pathlib import Path
@@ -11,23 +13,37 @@ from llama_index.core import SimpleDirectoryReader
 from vl_embedding import VL_Embedding, PICKLE_NODE
 import logging
 import time
-import pickle
+import numpy as np
 logger = logging.getLogger(__name__)
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Data Ingestion Processing')
+    parser.add_argument('--compress', action='store_true', default=True,
+                      help='Whether to compress node data (default: True)')
+    parser.add_argument('--dataset_dir', type=str, default='./search_engine/corpus',
+                      help='Path to dataset directory')
+    parser.add_argument('--input_prefix', type=str, default='img',
+                      help='Input directory prefix')
+    parser.add_argument('--output_prefix', type=str, default='colqwen_ingestion',
+                      help='Output directory prefix')
+    parser.add_argument('--embed_model_name', type=str, default='vidore/colqwen2-v1.0',
+                      help='Name of the embedding model')
+    return parser.parse_args()
+
 class Ingestion:
-    def __init__(self, dataset_dir,input_prefix='img',output_prefix='colqwen_ingestion',embed_model_name='vidore/colqwen2-v1.0'):
+    def __init__(self, dataset_dir, input_prefix='img', output_prefix='colqwen_ingestion', 
+                 embed_model_name='vidore/colqwen2-v1.0', compress=True):
         self.dataset_dir = dataset_dir
         self.input_dir  = os.path.join(dataset_dir, input_prefix)
         self.output_dir = os.path.join(dataset_dir, output_prefix)
         self.workers = 5
         self.embed_model_name = embed_model_name
+        self.compress = compress
         self.reader = SimpleDirectoryReader(input_dir = self.input_dir)
         self.pipeline = IngestionPipeline(transformations=[
             SimpleFileNodeParser(),
             VL_Embedding(model=embed_model_name,mode='image')
         ])
-
-
 
     def ingestion_example(self, input_file, output_file):  
         documents = self.reader.load_file(Path(input_file),self.reader.file_metadata,self.reader.file_extractor)
@@ -35,9 +51,9 @@ class Ingestion:
         start_time = time.time()
         nodes = self.pipeline.run(documents=documents,num_workers=1, show_progress=False)
         logger.info(f"document {input_file} ingestion time taken: {time.time() - start_time} seconds")
-        if PICKLE_NODE:
-            with open(output_file, 'wb') as f:
-                pickle.dump(nodes, f)
+        if self.compress:
+            output_file = output_file.replace('.node', '.npz')
+            np.savez_compressed(output_file, nodes=nodes)
         else:
             nodes_json = [node.to_dict() for node in nodes]
             with open(output_file, 'w') as json_file:
@@ -65,6 +81,13 @@ class Ingestion:
 
 
 if __name__ == '__main__':
-    dataset_dir = './search_engine/corpus'
-    ingestion = Ingestion(dataset_dir,input_prefix='img',output_prefix='colqwen_ingestion',embed_model_name='vidore/colqwen2-v1.0') # colqwen2
+    args = parse_args()
+    ingestion = Ingestion(
+        dataset_dir=args.dataset_dir,
+        input_prefix=args.input_prefix,
+        output_prefix=args.output_prefix,
+        embed_model_name=args.embed_model_name,
+        compress=args.compress
+    )
     ingestion.ingestion_multi_session()
+

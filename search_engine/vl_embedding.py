@@ -11,7 +11,7 @@ from llama_index.core.callbacks import CallbackManager
 from llama_index.core.base.embeddings.base import Embedding
 
 from colpali_engine.models import ColQwen2, ColQwen2Processor, ColPali, ColPaliProcessor
-PICKLE_NODE = True
+from transformers.utils.import_utils import is_flash_attn_2_available
 
 
 def weighted_mean_pooling(hidden, attention_mask):
@@ -92,6 +92,7 @@ class VL_Embedding(MultiModalEmbedding):
                 model,
                 torch_dtype=torch.bfloat16,
                 device_map='cuda',  # or "mps" if on Apple Silicon
+                attn_implementation="flash_attention_2" if is_flash_attn_2_available() else None,
             ).eval()
             self.processor = ColQwen2Processor.from_pretrained(model)
         elif 'vidore' in model and 'pali' in model:

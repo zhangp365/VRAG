@@ -6,8 +6,8 @@ from tqdm import tqdm
 import torch
 
 from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo, ImageNode
-from vl_embedding import VL_Embedding, PICKLE_NODE
-import pickle
+from vl_embedding import VL_Embedding
+import numpy as np
 import time
 import logging
 logger = logging.getLogger(__name__)
@@ -15,13 +15,10 @@ logger = logging.getLogger(__name__)
 
 def nodefile2node(input_file):
     nodes = []
-    if PICKLE_NODE:
-        try:
-            nodes = pickle.load(open(input_file, 'rb'))
-            return nodes
-        except Exception as e:
-            # if pickle file is not valid, try to load it as json
-            logger.warning(f"Error loading pickle file {input_file}: {e}")
+    if input_file.endswith('.npz'):
+        nodes = np.load(input_file, allow_pickle=True)['nodes']
+        nodes = [node for node in nodes]
+        return nodes
 
     for doc in json.load(open(input_file, 'r')):
         if doc['class_name'] == 'TextNode' and doc['text'] != '':
