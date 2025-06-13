@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 def nodefile2node(input_file):
     nodes = []
     if input_file.endswith('.npz'):
-        nodes = np.load(input_file, allow_pickle=True)['nodes']
-        nodes = [node for node in nodes]
+        np_nodes = np.load(input_file, allow_pickle=True)['nodes']
+        nodes = [node for node in np_nodes]
+        del np_nodes
         return nodes
 
     for doc in json.load(open(input_file, 'r')):
@@ -47,31 +48,36 @@ class SearchEngine:
             if suffix not in ['node', 'npz']:
                 return []
             nodes = nodefile2node(input_file)
+            embeddings = []
             for node in nodes:
                 old_embedding = node.embedding
-                node.embedding = torch.tensor(old_embedding).view(-1, 128).bfloat16()
+                embeddings.append(torch.tensor(old_embedding).view(-1, 128).bfloat16())
+                node.embedding = None
                 del old_embedding
-            return nodes
+            return nodes, embeddings
         files = os.listdir(self.node_dir)
         parsed_files = []
+        parsed_embeddings = []
         max_workers = 10
         if max_workers == 1:
             for file in tqdm(files):
-                nodes = parse_file(file, self.node_dir)
+                nodes , embeddings = parse_file(file, self.node_dir)
                 parsed_files.extend(nodes)
+                parsed_embeddings.extend(embeddings)
         else:           
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 # results = list(tqdm(executor.map(parse_file, files, self.node_dir), total=len(files)))
                 results = list(tqdm(executor.map(parse_file, files, [self.node_dir]*len(files)), total=len(files)))
             # 合并所有线程的结果
-            for result in results:
+            for result, embedding in results:
                 parsed_files.extend(result)
-        return parsed_files
+                parsed_embeddings.extend(embedding)
+        return parsed_files, parsed_embeddings
         
     def load_query_engine(self):
         print('Loading nodes...')
-        self.nodes = self.load_nodes()
-        self.embedding_img = [tensor.to(self.vector_embed_model.embed_model.device) for tensor in tqdm(self.nodes, desc="Moving to Device")]
+        self.nodes, self.embedding_img = self.load_nodes()
+        self.embedding_img = [tensor.to(self.vector_embed_model.embed_model.device) for tensor in tqdm(self.embedding_img, desc="Moving to Device")]
         self.image_nums = len(self.embedding_img)
 
     def load_node_postprocessors(self):
