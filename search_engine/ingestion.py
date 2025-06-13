@@ -66,7 +66,10 @@ class Ingestion:
         for file in os.listdir(self.input_dir):
             file_prefix,_ = os.path.splitext(file)
             input_file = os.path.join(self.input_dir, file)
-            output_file = os.path.join(self.output_dir, file_prefix) + '.node'
+            if self.compress:
+                output_file = os.path.join(self.output_dir, file_prefix) + '.npz'
+            else:
+                output_file = os.path.join(self.output_dir, file_prefix) + '.node'
             if not os.path.exists(output_file):
                 file_to_process.append((input_file, output_file))
         if self.workers == 1:
