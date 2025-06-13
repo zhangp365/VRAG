@@ -48,7 +48,7 @@ class SearchEngine:
             for file in tqdm(files):
                 input_file = os.path.join(self.node_dir, file)
                 suffix = input_file.split('.')[-1]
-                if suffix != 'node':
+                if suffix not in ['node', 'npz']:
                     continue
                 nodes = nodefile2node(input_file)
                 parsed_files.extend(nodes)
@@ -56,7 +56,7 @@ class SearchEngine:
             def parse_file(file,node_dir):
                 input_file = os.path.join(node_dir, file)
                 suffix = input_file.split('.')[-1]
-                if suffix != 'node':
+                if suffix not in ['node', 'npz']:
                     return []
                 return nodefile2node(input_file)
             
