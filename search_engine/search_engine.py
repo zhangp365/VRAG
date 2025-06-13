@@ -48,30 +48,68 @@ class SearchEngine:
             if suffix not in ['node', 'npz']:
                 return []
             nodes = nodefile2node(input_file)
-            embeddings = []
-            for node in nodes:
-                old_embedding = node.embedding
-                embeddings.append(torch.tensor(old_embedding).view(-1, 128).bfloat16())
-                node.embedding = None
-                del old_embedding
-            return nodes, embeddings
+            return nodes
+
+        def process_batch(file_batch):
+            batch_nodes = []
+            raw_embeddings = []
+            
+            # Collect all nodes and raw embeddings
+            for file in file_batch:
+                nodes = parse_file(file, self.node_dir)
+                batch_nodes.extend(nodes)
+                raw_embeddings.extend([node.embedding for node in nodes])
+                # Clean raw embeddings
+                for node in nodes:
+                    node.embedding = None
+            
+            # Process all embeddings in batch
+            if raw_embeddings:
+                # Check if all embedding lengths are consistent
+                embedding_lengths = [len(emb) for emb in raw_embeddings]
+                if len(set(embedding_lengths)) == 1:
+                    # If lengths are consistent, use batch processing
+                    batch_size = len(raw_embeddings)
+                    # Convert to tensor at once
+                    embeddings_tensor = torch.tensor(raw_embeddings, dtype=torch.float32)
+                    # Convert to bfloat16 in batch
+                    embeddings_tensor = embeddings_tensor.view(batch_size, -1, 128).bfloat16()
+                    # Convert to list
+                    batch_embeddings = [emb for emb in embeddings_tensor]
+                else:
+                    # If lengths are inconsistent, process one by one
+                    batch_embeddings = []
+                    for emb in raw_embeddings:
+                        emb_tensor = torch.tensor(emb, dtype=torch.float32)
+                        emb_tensor = emb_tensor.view(-1, 128).bfloat16()
+                        batch_embeddings.append(emb_tensor)
+            else:
+                batch_embeddings = []
+                
+            return batch_nodes, batch_embeddings
+
         files = os.listdir(self.node_dir)
         parsed_files = []
         parsed_embeddings = []
-        max_workers = 10
+        max_workers = 8
+        batch_size = 100  # Number of files to process at a time
+
+        # Split file list into multiple batches
+        file_batches = [files[i:i + batch_size] for i in range(0, len(files), batch_size)]
+
         if max_workers == 1:
-            for file in tqdm(files):
-                nodes , embeddings = parse_file(file, self.node_dir)
+            for batch in tqdm(file_batches):
+                nodes, embeddings = process_batch(batch)
                 parsed_files.extend(nodes)
                 parsed_embeddings.extend(embeddings)
-        else:           
+        else:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # results = list(tqdm(executor.map(parse_file, files, self.node_dir), total=len(files)))
-                results = list(tqdm(executor.map(parse_file, files, [self.node_dir]*len(files)), total=len(files)))
-            # 合并所有线程的结果
-            for result, embedding in results:
-                parsed_files.extend(result)
-                parsed_embeddings.extend(embedding)
+                futures = [executor.submit(process_batch, batch) for batch in file_batches]
+                for future in tqdm(as_completed(futures), total=len(file_batches)):
+                    nodes, embeddings = future.result()
+                    parsed_files.extend(nodes)
+                    parsed_embeddings.extend(embeddings)
+
         return parsed_files, parsed_embeddings
         
     def load_query_engine(self):
