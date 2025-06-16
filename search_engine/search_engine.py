@@ -1,45 +1,52 @@
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional, List, Mapping, Any, Dict
+from typing import List
 import json
 from tqdm import tqdm
 import torch
 import numpy as np
 import time
 import logging
-from pathlib import Path
-import io
 import pickle
-from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo, ImageNode
+from llama_index.core.schema import TextNode,  ImageNode
 from vl_embedding import VL_Embedding
 
 logger = logging.getLogger(__name__)
 
-def nodefile2node(input_file):
-    nodes = []
-    if input_file.endswith(".pkl"):
-        nodes = pickle.load(open(input_file, 'rb'))
-        return nodes
 
-    if input_file.endswith('.npz'):
+def nodefile2node(input_file):
+    nodes, embeddings = [], []
+    if input_file.endswith(".pkl"):
+        with open(input_file, 'rb') as f:
+            nodes = pickle.load(f)
+    elif input_file.endswith('.npz'):
         start_time = time.time()
-        # Use memory mapping for large npz files
-        with np.load(input_file, mmap_mode='r', allow_pickle=True) as data:
+        with np.load(input_file, allow_pickle=True) as data:
             np_nodes = data['nodes']
         loading_time = time.time() - start_time
         nodes = np_nodes.tolist()
         tolist_time = time.time() - start_time - loading_time
         logger.info(f"npz file {input_file} loading time: {loading_time:.2f} seconds, tolist time: {tolist_time:.2f} seconds")
-        return nodes
+    else:
+        nodes = json.load(open(input_file, 'r'))
 
-    for doc in json.load(open(input_file, 'r')):
-        if doc['class_name'] == 'TextNode' and doc['text'] != '':
-            nodes.append(TextNode.from_dict(doc))
-        elif doc['class_name'] == 'ImageNode':
-            nodes.append(ImageNode.from_dict(doc))
+    result_nodes = []
+    for node in nodes:
+        node_embedding = node.embedding if isinstance(node, ImageNode) else node['embedding']
+        if isinstance(node_embedding, torch.Tensor):
+            embeddings.append(node_embedding.view(-1, 128).to(torch.bfloat16))
         else:
-            continue
-    return nodes
+            embeddings.append(torch.tensor(node_embedding, dtype=torch.float32).view(-1, 128).to(torch.bfloat16))
+        if isinstance(node, dict):
+            node['embedding'] = None
+            if node['class_name'] == 'TextNode' and node['text'] != '':
+                result_nodes.append(TextNode.from_dict(node))
+            elif node['class_name'] == 'ImageNode':
+                result_nodes.append(ImageNode.from_dict(node))
+        else:
+            node.embedding = None
+            result_nodes.append(node)
+    return result_nodes, embeddings
 
 class SearchEngine:
     def __init__(self, dataset_dir='search_engine/corpus', node_dir_prefix='colqwen_ingestion',embed_model_name='vidore/colqwen2-v1.0'): # "vidore/colqwen2-v0.1"
@@ -53,59 +60,21 @@ class SearchEngine:
         self.query_engine = self.load_query_engine()
 
     def load_nodes(self):
-        start_time = time.time()
         
         def parse_file(file,node_dir):
             parse_start = time.time()
             input_file = os.path.join(node_dir, file)
             suffix = input_file.split('.')[-1]
-            if suffix not in ['node', 'npz']:
+            if suffix not in ['node', 'npz', 'pkl']:
                 return []
-            nodes = nodefile2node(input_file)
+            nodes, embeddings = nodefile2node(input_file)
             logger.info(f"File {file} parsing time: {time.time() - parse_start:.2f} seconds")
-            return nodes
-
-        def process_file(file):
-            process_start = time.time()
-            
-            # Parse nodes
-            nodes = parse_file(file, self.node_dir)
-            parse_time = time.time() - process_start
-            
-            # Extract embeddings
-            embed_start = time.time()
-            raw_embeddings = [node.embedding for node in nodes]
-            # Clean raw embeddings
-            for node in nodes:
-                node.embedding = None
-            embed_extract_time = time.time() - embed_start
-                
-            # Process embeddings
-            tensor_start = time.time()
-            if raw_embeddings:
-                embedding_lengths = [len(emb) for emb in raw_embeddings]
-                if len(set(embedding_lengths)) == 1:
-                    # If lengths are consistent, use batch processing
-                    batch_size = len(raw_embeddings)
-                    embeddings_tensor = torch.tensor(raw_embeddings, dtype=torch.float32)
-                    embeddings_tensor = embeddings_tensor.view(batch_size, -1, 128).bfloat16()
-                    batch_embeddings = [emb for emb in embeddings_tensor]
-                else:
-                    # If lengths are inconsistent, process one by one
-                    batch_embeddings = []
-                    for emb in raw_embeddings:
-                        emb_tensor = torch.tensor(emb, dtype=torch.float32)
-                        emb_tensor = emb_tensor.view(-1, 128).bfloat16()
-                        batch_embeddings.append(emb_tensor)
-                tensor_time = time.time() - tensor_start
-                logger.info(f"File {file} processing times - Parse: {parse_time:.2f}s, Embed extract: {embed_extract_time:.2f}s, Tensor convert: {tensor_time:.2f}s")
-                return nodes, batch_embeddings
-            return nodes, []
+            return nodes, embeddings        
 
         files = os.listdir(self.node_dir)
         parsed_files = []
         parsed_embeddings = []
-        if len(files) > 0 and files[0].endswith('.npz'):
+        if len(files) > 0 and files[0].endswith(('.npz', '.pkl')):
             # when loading big npz file, using single worker is the fastest.
             max_workers = 1 
         else:
@@ -113,7 +82,7 @@ class SearchEngine:
 
         # Process files using multiprocessing
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(process_file, file) for file in files]
+            futures = [executor.submit(parse_file, file, self.node_dir) for file in files]
             for future in tqdm(as_completed(futures), total=len(files)):
                 nodes, embeddings = future.result()
                 parsed_files.extend(nodes)
