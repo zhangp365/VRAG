@@ -4,21 +4,32 @@ from typing import Optional, List, Mapping, Any, Dict
 import json
 from tqdm import tqdm
 import torch
-
-from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo, ImageNode
-from vl_embedding import VL_Embedding
 import numpy as np
 import time
 import logging
-logger = logging.getLogger(__name__)
+from pathlib import Path
+import io
+import pickle
+from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo, ImageNode
+from vl_embedding import VL_Embedding
 
+logger = logging.getLogger(__name__)
 
 def nodefile2node(input_file):
     nodes = []
+    if input_file.endswith(".pkl"):
+        nodes = pickle.load(open(input_file, 'rb'))
+        return nodes
+
     if input_file.endswith('.npz'):
-        np_nodes = np.load(input_file, allow_pickle=True)['nodes']
-        nodes = [node for node in np_nodes]
-        del np_nodes
+        start_time = time.time()
+        # Use memory mapping for large npz files
+        with np.load(input_file, mmap_mode='r', allow_pickle=True) as data:
+            np_nodes = data['nodes']
+        loading_time = time.time() - start_time
+        nodes = np_nodes.tolist()
+        tolist_time = time.time() - start_time - loading_time
+        logger.info(f"npz file {input_file} loading time: {loading_time:.2f} seconds, tolist time: {tolist_time:.2f} seconds")
         return nodes
 
     for doc in json.load(open(input_file, 'r')):
@@ -42,39 +53,42 @@ class SearchEngine:
         self.query_engine = self.load_query_engine()
 
     def load_nodes(self):
+        start_time = time.time()
+        
         def parse_file(file,node_dir):
+            parse_start = time.time()
             input_file = os.path.join(node_dir, file)
             suffix = input_file.split('.')[-1]
             if suffix not in ['node', 'npz']:
                 return []
             nodes = nodefile2node(input_file)
+            logger.info(f"File {file} parsing time: {time.time() - parse_start:.2f} seconds")
             return nodes
 
-        def process_batch(file_batch):
-            batch_nodes = []
-            raw_embeddings = []
+        def process_file(file):
+            process_start = time.time()
             
-            # Collect all nodes and raw embeddings
-            for file in file_batch:
-                nodes = parse_file(file, self.node_dir)
-                batch_nodes.extend(nodes)
-                raw_embeddings.extend([node.embedding for node in nodes])
-                # Clean raw embeddings
-                for node in nodes:
-                    node.embedding = None
+            # Parse nodes
+            nodes = parse_file(file, self.node_dir)
+            parse_time = time.time() - process_start
             
-            # Process all embeddings in batch
+            # Extract embeddings
+            embed_start = time.time()
+            raw_embeddings = [node.embedding for node in nodes]
+            # Clean raw embeddings
+            for node in nodes:
+                node.embedding = None
+            embed_extract_time = time.time() - embed_start
+                
+            # Process embeddings
+            tensor_start = time.time()
             if raw_embeddings:
-                # Check if all embedding lengths are consistent
                 embedding_lengths = [len(emb) for emb in raw_embeddings]
                 if len(set(embedding_lengths)) == 1:
                     # If lengths are consistent, use batch processing
                     batch_size = len(raw_embeddings)
-                    # Convert to tensor at once
                     embeddings_tensor = torch.tensor(raw_embeddings, dtype=torch.float32)
-                    # Convert to bfloat16 in batch
                     embeddings_tensor = embeddings_tensor.view(batch_size, -1, 128).bfloat16()
-                    # Convert to list
                     batch_embeddings = [emb for emb in embeddings_tensor]
                 else:
                     # If lengths are inconsistent, process one by one
@@ -83,33 +97,28 @@ class SearchEngine:
                         emb_tensor = torch.tensor(emb, dtype=torch.float32)
                         emb_tensor = emb_tensor.view(-1, 128).bfloat16()
                         batch_embeddings.append(emb_tensor)
-            else:
-                batch_embeddings = []
-                
-            return batch_nodes, batch_embeddings
+                tensor_time = time.time() - tensor_start
+                logger.info(f"File {file} processing times - Parse: {parse_time:.2f}s, Embed extract: {embed_extract_time:.2f}s, Tensor convert: {tensor_time:.2f}s")
+                return nodes, batch_embeddings
+            return nodes, []
 
         files = os.listdir(self.node_dir)
         parsed_files = []
         parsed_embeddings = []
-        max_workers = 8
-        batch_size = 100  # Number of files to process at a time
+        if len(files) > 0 and files[0].endswith('.npz'):
+            # when loading big npz file, using single worker is the fastest.
+            max_workers = 1 
+        else:
+            max_workers = min(8, os.cpu_count() or 1)  # Adjust workers based on CPU cores
 
-        # Split file list into multiple batches
-        file_batches = [files[i:i + batch_size] for i in range(0, len(files), batch_size)]
-
-        if max_workers == 1:
-            for batch in tqdm(file_batches):
-                nodes, embeddings = process_batch(batch)
+        # Process files using multiprocessing
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(process_file, file) for file in files]
+            for future in tqdm(as_completed(futures), total=len(files)):
+                nodes, embeddings = future.result()
                 parsed_files.extend(nodes)
                 parsed_embeddings.extend(embeddings)
-        else:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [executor.submit(process_batch, batch) for batch in file_batches]
-                for future in tqdm(as_completed(futures), total=len(file_batches)):
-                    nodes, embeddings = future.result()
-                    parsed_files.extend(nodes)
-                    parsed_embeddings.extend(embeddings)
-
+        
         return parsed_files, parsed_embeddings
         
     def load_query_engine(self):
