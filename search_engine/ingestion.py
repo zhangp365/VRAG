@@ -2,14 +2,14 @@ import os
 import sys
 import json
 import argparse
-
+import torch
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from pathlib import Path
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SimpleFileNodeParser
 from llama_index.core import SimpleDirectoryReader
-
+import pickle
 from vl_embedding import VL_Embedding
 import logging
 import time
@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Data Ingestion Processing')
-    parser.add_argument('--compress', action='store_true', default=True,
-                      help='Whether to compress node data (default: True)')
+    parser.add_argument('--pickle_nodes', action='store_true', default=True,
+                      help='Whether to pickle node data (default: True)')
     parser.add_argument('--dataset_dir', type=str, default='./search_engine/corpus',
                       help='Path to dataset directory')
     parser.add_argument('--input_prefix', type=str, default='img',
@@ -32,13 +32,13 @@ def parse_args():
 
 class Ingestion:
     def __init__(self, dataset_dir, input_prefix='img', output_prefix='colqwen_ingestion', 
-                 embed_model_name='vidore/colqwen2-v1.0', compress=True):
+                 embed_model_name='vidore/colqwen2-v1.0', pickle_nodes=True):
         self.dataset_dir = dataset_dir
         self.input_dir  = os.path.join(dataset_dir, input_prefix)
         self.output_dir = os.path.join(dataset_dir, output_prefix)
         self.workers = 5
         self.embed_model_name = embed_model_name
-        self.compress = compress
+        self.pickle_nodes = pickle_nodes
         self.reader = SimpleDirectoryReader(input_dir = self.input_dir)
         self.pipeline = IngestionPipeline(transformations=[
             SimpleFileNodeParser(),
@@ -51,11 +51,15 @@ class Ingestion:
         start_time = time.time()
         nodes = self.pipeline.run(documents=documents,num_workers=1, show_progress=False)
         logger.info(f"document {input_file} ingestion time taken: {time.time() - start_time} seconds")
-        if self.compress:
-            output_file = output_file.replace('.node', '.npz')
-            np.savez_compressed(output_file, nodes=nodes)
-        else:
-            nodes_json = [node.to_dict() for node in nodes]
+        nodes_json = [node.to_dict() for node in nodes]
+        if self.pickle_nodes:
+            output_file = output_file.replace('.node', '.pkl')
+            for node in nodes_json:
+                node['embedding'] =  torch.tensor(node['embedding'], dtype=torch.float32).view(-1, 128).to(torch.bfloat16)
+            with open(output_file, 'wb') as f:
+                pickle.dump(nodes_json, f)
+            logger.info(f"pickle file {output_file} saved")
+        else:            
             with open(output_file, 'w') as json_file:
                 json.dump(nodes_json, json_file, indent=2, ensure_ascii=False)        
         return True
@@ -66,8 +70,8 @@ class Ingestion:
         for file in os.listdir(self.input_dir):
             file_prefix,_ = os.path.splitext(file)
             input_file = os.path.join(self.input_dir, file)
-            if self.compress:
-                output_file = os.path.join(self.output_dir, file_prefix) + '.npz'
+            if self.pickle_nodes:
+                output_file = os.path.join(self.output_dir, file_prefix) + '.pkl'
             else:
                 output_file = os.path.join(self.output_dir, file_prefix) + '.node'
             if not os.path.exists(output_file):
@@ -90,7 +94,7 @@ if __name__ == '__main__':
         input_prefix=args.input_prefix,
         output_prefix=args.output_prefix,
         embed_model_name=args.embed_model_name,
-        compress=args.compress
+        pickle_nodes=args.pickle_nodes
     )
     ingestion.ingestion_multi_session()
 
