@@ -100,7 +100,7 @@ class VRAG:
             match = re.search(pattern, response_content, re.DOTALL)
             thought = match.group(1)
             if self.generator:
-                yield 'think', thought, match.group(0)
+                yield 'think', thought, match.group(0), []
             ## opration
             pattern = r'<(search|answer|bbox)>(.*?)</\1>'
             match = re.search(pattern, response_content, re.DOTALL)
@@ -114,11 +114,11 @@ class VRAG:
 
             ## whether end
             if action == 'answer':
-                return 'answer', content, raw_content
+                return 'answer', content, raw_content, []
             elif max_steps==0:
-                return 'answer', 'Sorry, I can not retrieval something about the question.', ''
+                return 'answer', 'Sorry, I can not retrieval something about the question.', '', []
             elif self.generator:
-                yield action, content, raw_content
+                yield action, content, raw_content, []
 
             ## action
             if action == 'search':
@@ -141,8 +141,9 @@ class VRAG:
                 }]
                 self.image_raw.append(image_raw)
                 self.image_input.append(image_input)
+                candidate_images = [Image.open(image_path) for image_path in search_results if image_path not in self.image_path]
                 if self.generator:
-                    yield 'search_image', self.image_input[-1], raw_content
+                    yield 'search_image', self.image_input[-1], raw_content, candidate_images
             elif action == 'bbox':
                 bbox = json.loads(content)
                 input_w, input_h = self.image_input[-1].size
@@ -165,7 +166,7 @@ class VRAG:
                     image_to_draw = self.image_input[-2].copy()
                     draw = ImageDraw.Draw(image_to_draw)
                     draw.rectangle(bbox, outline=(160, 32, 240), width=7)
-                    yield 'crop_image', self.image_input[-1], image_to_draw
+                    yield 'crop_image', self.image_input[-1], image_to_draw, []
 
             max_steps -= 1
             if max_steps == 0:

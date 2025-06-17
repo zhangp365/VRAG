@@ -1,7 +1,7 @@
 import streamlit as st
 from vrag_agent import VRAG
 from PIL import Image
-from time import sleep
+from time import sleep, time
 
 # Set page configuration
 st.set_page_config(
@@ -10,6 +10,13 @@ st.set_page_config(
     layout="wide",   # Wide layout
     initial_sidebar_state="expanded"
 )
+
+# Initialize session state for image index if not exists
+if 'image_index' not in st.session_state:
+    st.session_state.image_index = 0
+if 'all_images' not in st.session_state:
+    st.session_state.all_images = []
+
 
 def typewriter_effect(container, text, delay=0.02):
     # This function simulates a typewriter effect by gradually appending characters
@@ -24,7 +31,6 @@ def typewriter_effect(container, text, delay=0.02):
         sleep(delay)
     container.markdown(f'<div class="info-box">{text}</div>', unsafe_allow_html=True)
     
-
 
 def main():
     # Page title
@@ -135,7 +141,7 @@ def main():
             image_width = 350
             try:
                 while True:
-                    action, content, raw_content = next(generator)
+                    action, content, raw_content, candidate_images = next(generator)
                     if action == 'think':
                         sleep(0.5)
                         think = f"💭 Thinking: {content}"
@@ -148,12 +154,32 @@ def main():
                         typewriter_effect(st.empty(), f'{think} <br> 📷 <strong>Region of Interest: {content}</strong>')
                         # st.markdown(f'<div class="info-box">{think} <br> 📷 Region of Interest: {content}</div>', unsafe_allow_html=True)
                     elif action == 'search_image':
+                        # Store the image in session state
+                        st.session_state.all_images = candidate_images if candidate_images else []
                         col1, col2 = st.columns(2)
                         with col1:
                             st.markdown(f'<p class="caption">Retrieved Image</p>', unsafe_allow_html=True)
                             st.markdown('<div class="small-image">', unsafe_allow_html=True)
-                            st.image(content, width=image_width)
+                            st.image(content, width=image_width, use_container_width=True, clamp=True)
                             st.markdown('</div>', unsafe_allow_html=True)
+                        with col2:
+                            if st.session_state.all_images:
+                                st.markdown(f'<p class="caption">Other Retrieved Images ({len(st.session_state.all_images)})</p>', unsafe_allow_html=True)
+                                
+                                # 创建九宫格布局
+                                st.markdown('<div class="small-image">', unsafe_allow_html=True)
+                                
+                                # 创建网格
+                                for i in range(0, len(st.session_state.all_images), 3):
+                                    cols = st.columns(3)
+                                    for j in range(3):
+                                        idx = i + j
+                                        if idx < len(st.session_state.all_images):
+                                            with cols[j]:
+                                                st.image(st.session_state.all_images[idx], width=image_width, use_container_width=True, clamp=True)
+                                st.markdown('</div>', unsafe_allow_html=True)
+                            else:
+                                st.markdown(f'<p class="caption">No additional images available</p>', unsafe_allow_html=True)
                     elif action == 'crop_image':
                         col1, col2 = st.columns(2)
                         with col1:
@@ -168,7 +194,7 @@ def main():
                             st.image(content, width=image_width) 
                             st.markdown('</div>', unsafe_allow_html=True)
             except StopIteration as e:
-                action, content, raw_response = e.value
+                action, content, raw_response, candidate_images = e.value
                 if action == 'answer':
                     st.success(f"✅ Answer: {content}")
 
