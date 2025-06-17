@@ -20,13 +20,9 @@ def nodefile2node(input_file):
         with open(input_file, 'rb') as f:
             nodes = pickle.load(f)
     elif input_file.endswith('.npz'):
-        start_time = time.time()
         with np.load(input_file, allow_pickle=True) as data:
             np_nodes = data['nodes']
-        loading_time = time.time() - start_time
         nodes = np_nodes.tolist()
-        tolist_time = time.time() - start_time - loading_time
-        logger.info(f"npz file {input_file} loading time: {loading_time:.2f} seconds, tolist time: {tolist_time:.2f} seconds")
     else:
         nodes = json.load(open(input_file, 'r'))
 
@@ -66,7 +62,7 @@ class SearchEngine:
             input_file = os.path.join(node_dir, file)
             suffix = input_file.split('.')[-1]
             if suffix not in ['node', 'npz', 'pkl']:
-                return []
+                return [],[]
             nodes, embeddings = nodefile2node(input_file)
             logger.info(f"File {file} parsing time: {time.time() - parse_start:.2f} seconds")
             return nodes, embeddings        
@@ -105,6 +101,7 @@ class SearchEngine:
             query_embeddings = self.vector_embed_model.embed_model(**batch_queries)
         scores = self.vector_embed_model.processor.score_multi_vector(query_embeddings, self.embedding_img, batch_size=256, device=self.vector_embed_model.embed_model.device)
         values, indices = torch.topk(scores, k=min(self.image_nums,10), dim=1)
+        logger.info(f"search results: queries {queries}, top 10 scores: {values}")
         recall_results = [[self.nodes[idx].metadata['file_name'] for idx in row] for row in indices]
         logger.info(f"batch_search time taken: {(time.time() - start_time):.2f} seconds")
         return recall_results
