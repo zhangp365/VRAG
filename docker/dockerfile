@@ -1,0 +1,37 @@
+# Dockerfile
+FROM docker.1ms.run/dustynv/vllm:0.9.2-r36.4-cu128-24.04
+
+# 设置工作目录
+WORKDIR /app
+
+ENV PIP_INDEX_URL=https://pypi.jetson-ai-lab.dev/jp6/cu128 \
+    PIP_NO_CACHE_DIR=true \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PIP_VERBOSE=1 \
+    PIP_ROOT_USER_ACTION=ignore
+
+# 克隆代码
+RUN git clone https://github.com/zhangp365/VRAG.git .
+
+# 删除 vllm==0.8.2 并安装依赖
+RUN sed -i '/vllm==0.8.2/d' requirements.txt \
+    && pip install -r requirements.txt --no-deps \
+    && pip install llama-index pandas
+
+# 安装 supervisord
+RUN apt-get update && apt-get install -y supervisor
+
+# 创建日志目录
+RUN mkdir -p /app/logs
+
+ARG BUILD_DATE
+ENV BUILD_DATE=$BUILD_DATE
+RUN echo "$BUILD_DATE" > /build_date.txt
+
+# 复制 supervisord 配置
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+RUN git pull
+
+CMD ["supervisord", "-n"]

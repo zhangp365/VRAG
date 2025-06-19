@@ -7,16 +7,27 @@ from io import BytesIO
 
 from openai import OpenAI
 from PIL import Image, ImageDraw
+from load_config import config
 
 prompt_ins = '''Answer the given question. You must conduct reasoning inside <think> and </think> first every time you get new information. After reasoning, if you find you lack some knowledge, you can call a search engine by <search> query </search> and user will return the searched results. Every time you retrieve an image, you have the option to crop it to obtain a clearer view, the format for coordinates is <bbox>[x1, y1, x2, y2]</bbox>. You can search as many times as your want. If you find no further external knowledge needed, you can directly provide the answer inside <answer> and </answer>, without detailed illustrations. For example, <answer> Beijing </answer>. Question: {question}
 '''
+base_url = "http://0.0.0.0:8001/v1"
+search_url = "http://0.0.0.0:8002/search"
+api_key = "EMPTY"
+
+
+if config:
+    base_url = config.get("base_url", base_url)
+    search_url = config.get("search_url", search_url)
+    api_key = config.get("api_key", api_key)
+    prompt_ins = config.get("prompt_ins", prompt_ins)
 
 class VRAG:
     def __init__(self, 
-                base_url='http://0.0.0.0:8001/v1', 
-                search_url='http://0.0.0.0:8002/search',
+                base_url=base_url, 
+                search_url=search_url,
                 generator=True,
-                api_key='EMPTY'):
+                api_key=api_key):
         
         self.client = OpenAI(base_url=base_url, api_key=api_key)
         self.search_url = search_url
