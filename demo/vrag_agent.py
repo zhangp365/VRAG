@@ -52,7 +52,7 @@ class VRAG:
         byte_array = byte_stream.getvalue()
         base64_encoded_image = base64.b64encode(byte_array)
         base64_string = base64_encoded_image.decode("utf-8")
-        base64_qwen = f"data:image;base64,{base64_string}"
+        base64_qwen = f"data:image/jpeg;base64,{base64_string}"
 
         return image, base64_qwen
     
@@ -98,9 +98,9 @@ class VRAG:
             ## think
             pattern = r'<think>(.*?)</think>'
             match = re.search(pattern, response_content, re.DOTALL)
-            thought = match.group(1)
+            thought = match.group(1) if match else ''
             if self.generator:
-                yield 'think', thought, match.group(0), []
+                yield 'think', thought, match.group(0) if match else '', []
             ## opration
             pattern = r'<(search|answer|bbox)>(.*?)</\1>'
             match = re.search(pattern, response_content, re.DOTALL)
@@ -109,6 +109,7 @@ class VRAG:
                 content = match.group(2).strip()  # Return only the content inside the tags
                 action = match.group(1)
             else:
+                raw_content = response_content
                 content = ''
                 action = None
 
