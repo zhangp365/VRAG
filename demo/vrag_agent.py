@@ -14,6 +14,7 @@ prompt_ins = '''Answer the given question. You must conduct reasoning inside <th
 base_url = "http://0.0.0.0:8001/v1"
 search_url = "http://0.0.0.0:8002/search"
 api_key = "EMPTY"
+model = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 
 if config:
@@ -21,6 +22,7 @@ if config:
     search_url = config.get("search_url", search_url)
     api_key = config.get("api_key", api_key)
     prompt_ins = config.get("prompt_ins", prompt_ins)
+    model = config.get("model", model)
 
 class VRAG:
     def __init__(self, 
@@ -94,7 +96,7 @@ class VRAG:
         while True:
             ## assistant
             response = self.client.chat.completions.create(
-                model="Qwen/Qwen2.5-VL-7B-Instruct",
+                model=model,
                 messages=messages,
                 stream=False
             )
