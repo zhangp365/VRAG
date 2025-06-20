@@ -19,6 +19,8 @@ RUN sed -i '/vllm==0.8.2/d' requirements.txt \
     && pip install -r requirements.txt --no-deps \
     && pip install llama-index pandas
 
+RUN pip install tornado
+
 # 安装 supervisord
 RUN apt-get update && apt-get install -y supervisor
 
